@@ -1,0 +1,161 @@
+<div class="calendar-container">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Calendar</h1>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">View your tasks by date</p>
+    </div>
+    <div class="flex items-center space-x-3">
+      <button (click)="goToToday()" class="btn-outline">
+        Today
+      </button>
+      <div class="flex items-center space-x-2">
+        <button (click)="previousMonth()" class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white min-w-[200px] text-center">
+          {{ monthName() }}
+        </h2>
+        <button (click)="nextMonth()" class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="card p-6">
+    <!-- Day Headers -->
+    <div class="grid grid-cols-7 gap-2 mb-4">
+      <div *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" 
+           class="text-center font-semibold text-gray-700 dark:text-gray-300 py-2">
+        {{ day }}
+      </div>
+    </div>
+
+    <!-- Calendar Days -->
+    <div class="grid grid-cols-7 gap-2">
+      <div
+        *ngFor="let day of calendarDays()"
+        (click)="selectDate(day.date)"
+        class="min-h-[100px] p-2 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+        [class.bg-gray-50]="!day.isCurrentMonth"
+        [class.bg-primary-50]="day.isToday"
+        [class.border-primary-500]="day.isToday"
+        [class.opacity-50]="!day.isCurrentMonth"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <span
+            class="text-sm font-medium"
+            [class.text-gray-900]="day.isCurrentMonth"
+            [class.text-gray-400]="!day.isCurrentMonth"
+            [class.text-primary-600]="day.isToday"
+            [class.font-bold]="day.isToday"
+          >
+            {{ day.date.getDate() }}
+          </span>
+          <span *ngIf="day.tasks.length > 0" class="text-xs bg-primary-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+            {{ day.tasks.length }}
+          </span>
+        </div>
+        <div class="space-y-1">
+          <div
+            *ngFor="let task of day.tasks.slice(0, 3)"
+            class="text-xs px-2 py-1 rounded truncate"
+            [class]="getStatusColor(task.status)"
+            [class.text-white]="task.status !== 'todo'"
+            [class.text-gray-800]="task.status === 'todo'"
+          >
+            {{ task.title }}
+          </div>
+          <div *ngIf="day.tasks.length > 3" class="text-xs text-gray-500 dark:text-gray-400">
+            +{{ day.tasks.length - 3 }} more
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Modal -->
+  <div
+    *ngIf="showTaskModal() && selectedDate()"
+    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+    (click)="closeTaskModal()"
+  >
+    <div
+      class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            Tasks for {{ selectedDate() | date:'fullDate' }}
+          </h2>
+          <button
+            (click)="closeTaskModal()"
+            class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <div *ngIf="selectedDateTasks().length === 0" class="text-center py-12">
+          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <p class="text-gray-600 dark:text-gray-400">No tasks scheduled for this date</p>
+        </div>
+
+        <div *ngIf="selectedDateTasks().length > 0" class="space-y-4">
+          <div
+            *ngFor="let task of selectedDateTasks()"
+            class="card hover:shadow-lg transition-shadow"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  {{ task.title }}
+                </h3>
+                <p *ngIf="task.description" class="text-gray-600 dark:text-gray-400 mb-3">
+                  {{ task.description }}
+                </p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2 py-1 rounded-md text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                    {{ task.category }}
+                  </span>
+                  <span class="px-2 py-1 rounded-md text-xs font-medium"
+                        [class.bg-danger-100]="task.priority === 'high'"
+                        [class.text-danger-800]="task.priority === 'high'"
+                        [class.bg-warning-100]="task.priority === 'medium'"
+                        [class.text-warning-800]="task.priority === 'medium'"
+                        [class.bg-secondary-100]="task.priority === 'low'"
+                        [class.text-secondary-800]="task.priority === 'low'">
+                    {{ task.priority | titlecase }}
+                  </span>
+                  <span class="px-2 py-1 rounded-md text-xs font-medium"
+                        [class.bg-gray-100]="task.status === 'todo'"
+                        [class.text-gray-800]="task.status === 'todo'"
+                        [class.bg-primary-100]="task.status === 'in-progress'"
+                        [class.text-primary-800]="task.status === 'in-progress'"
+                        [class.bg-secondary-100]="task.status === 'completed'"
+                        [class.text-secondary-800]="task.status === 'completed'">
+                    {{ task.status === 'in-progress' ? 'In Progress' : (task.status | titlecase) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

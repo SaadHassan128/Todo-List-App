@@ -1,0 +1,288 @@
+/* Login container */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 50%, #f0fdf4 100%);
+  padding: 2rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 28rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  width: 4rem;
+  height: 4rem;
+  background: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: white;
+}
+
+.logo svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.login-header h2 {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.login-header p {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.login-form {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.input-container {
+  position: relative;
+}
+
+.input-container input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: white;
+  font-size: 0.875rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-container input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-container input.error {
+  border-color: #ef4444;
+}
+
+.input-container svg {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #9ca3af;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  color: #6b7280;
+}
+
+.field-error {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  margin-right: 0.5rem;
+}
+
+.form-options a {
+  font-size: 0.875rem;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.form-options a:hover {
+  color: #2563eb;
+}
+
+.submit-btn {
+  width: 100%;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+.register-link {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.register-link p {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.register-link a {
+  color: #3b82f6;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.register-link a:hover {
+  color: #2563eb;
+}
+
+.demo-info {
+  text-align: center;
+}
+
+.demo-card {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.demo-card svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #f59e0b;
+  margin-right: 0.5rem;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.demo-card p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
+.demo-card strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.error-message svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #dc2626;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.error-message p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

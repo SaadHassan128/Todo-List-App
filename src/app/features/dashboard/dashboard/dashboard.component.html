@@ -1,0 +1,134 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="greeting-section">
+      <h1>{{ getGreeting() }}, {{ currentUser()?.firstName || 'User' }}! 👋</h1>
+      <p class="motivational-text">{{ getMotivationalMessage() }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" (click)="createDemoTask()">
+        Add Demo Task
+      </button>
+    </div>
+  </div>
+
+  <!-- Quick Stats Cards -->
+  <div class="stats-grid">
+    <div *ngFor="let stat of quickStats()" class="stat-card" [ngClass]="'stat-' + stat.color">
+      <div class="stat-icon">{{ stat.icon }}</div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ stat.value }}</h3>
+        <p class="stat-title">{{ stat.title }}</p>
+        <span *ngIf="stat.change" class="stat-change">{{ stat.change }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts and Analytics -->
+  <div class="analytics-grid">
+    <!-- Task Status Overview - Doughnut Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Task Status Overview</h3>
+        <span class="chart-subtitle">Current task distribution</span>
+      </div>
+      <div class="chart-container">
+        <canvas baseChart
+                [data]="taskStatusChartData"
+                [type]="taskStatusChartType"
+                [options]="taskStatusChartOptions">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Weekly Progress - Bar Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Weekly Progress</h3>
+        <span class="chart-subtitle">Tasks completed this week</span>
+      </div>
+      <div class="chart-container">
+        <canvas baseChart
+                [data]="weeklyProgressChartData"
+                [type]="weeklyProgressChartType"
+                [options]="weeklyProgressChartOptions">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Priority Distribution - Pie Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Priority Distribution</h3>
+        <span class="chart-subtitle">Tasks by priority level</span>
+      </div>
+      <div class="chart-container">
+        <canvas baseChart
+                [data]="priorityChartData"
+                [type]="priorityChartType"
+                [options]="priorityChartOptions">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Productivity Trends - Line Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Productivity Trends</h3>
+        <span class="chart-subtitle">Completion rate over the last 7 days</span>
+      </div>
+      <div class="chart-container">
+        <canvas baseChart
+                [data]="productivityChartData"
+                [type]="productivityChartType"
+                [options]="productivityChartOptions">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Quick Actions</h3>
+        <span class="chart-subtitle">Navigate to different sections</span>
+      </div>
+      <div class="quick-actions">
+        <a routerLink="/tasks" class="action-button">
+          <div class="action-icon">📋</div>
+          <span>View Tasks</span>
+        </a>
+        <a routerLink="/calendar" class="action-button">
+          <div class="action-icon">📅</div>
+          <span>Calendar View</span>
+        </a>
+        <a routerLink="/profile" class="action-button">
+          <div class="action-icon">👤</div>
+          <span>Profile</span>
+        </a>
+        <a routerLink="/settings" class="action-button">
+          <div class="action-icon">⚙️</div>
+          <span>Settings</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Breakdown -->
+  <div class="categories-section" *ngIf="dashboardStats().categoryStats.length > 0">
+    <h3>Tasks by Category</h3>
+    <div class="categories-grid">
+      <div *ngFor="let category of dashboardStats().categoryStats" class="category-card">
+        <div class="category-header">
+          <h4>{{ category.category }}</h4>
+          <span class="category-count">{{ category.count }}</span>
+        </div>
+        <div class="category-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="(category.completed / mathMax(category.count, 1)) * 100"></div>
+          </div>
+          <span class="progress-text">{{ category.completed }}/{{ category.count }} completed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

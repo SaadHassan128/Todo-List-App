@@ -1,0 +1,131 @@
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
+  <div class="max-w-md w-full space-y-8">
+    <div class="text-center">
+      <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h2>
+      <p class="text-gray-600 dark:text-gray-400">Join us and start managing your tasks</p>
+    </div>
+
+    <div class="glass-card p-8 rounded-2xl shadow-xl">
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <!-- Error Message -->
+        <div *ngIf="error()" class="bg-danger-50 dark:bg-danger-900/20 border border-danger-200 rounded-lg p-4">
+          <p class="text-sm text-danger-700 dark:text-danger-400">{{ error() }}</p>
+        </div>
+
+        <!-- Profile Picture -->
+        <div class="flex flex-col items-center">
+          <div class="relative">
+            <img
+              [src]="profilePicturePreview() || 'https://via.placeholder.com/100x100?text=Avatar'"
+              alt="Profile preview"
+              class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+            />
+            <label class="absolute bottom-0 right-0 bg-primary-600 text-white rounded-full p-2 cursor-pointer hover:bg-primary-700">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              <input type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden"/>
+            </label>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Click to upload profile picture (optional)</p>
+        </div>
+
+        <!-- Name Fields -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
+            <input type="text" formControlName="firstName" class="input-primary"
+                   [class.border-danger-500]="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched">
+            <p *ngIf="getFieldError('firstName')" class="mt-1 text-sm text-danger-600">{{ getFieldError('firstName') }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
+            <input type="text" formControlName="lastName" class="input-primary"
+                   [class.border-danger-500]="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched">
+            <p *ngIf="getFieldError('lastName')" class="mt-1 text-sm text-danger-600">{{ getFieldError('lastName') }}</p>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+          <input type="email" formControlName="email" class="input-primary"
+                 [class.border-danger-500]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+          <p *ngIf="getFieldError('email')" class="mt-1 text-sm text-danger-600">{{ getFieldError('email') }}</p>
+        </div>
+
+        <!-- Phone -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
+          <input type="tel" formControlName="phone" class="input-primary" placeholder="+1234567890"
+                 [class.border-danger-500]="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched">
+          <p *ngIf="getFieldError('phone')" class="mt-1 text-sm text-danger-600">{{ getFieldError('phone') }}</p>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+          <div class="relative">
+            <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" class="input-primary pr-10"
+                   [class.border-danger-500]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+            <button type="button" (click)="togglePasswordVisibility('password')" class="absolute right-3 top-3">
+              <svg *ngIf="!showPassword()" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+          <!-- Password Strength Indicator -->
+          <div *ngIf="registerForm.get('password')?.value" class="mt-2">
+            <div class="flex justify-between text-xs mb-1">
+              <span>Password Strength:</span>
+              <span [class]="getPasswordStrength().color === 'danger' ? 'text-danger-600' :
+                             getPasswordStrength().color === 'warning' ? 'text-warning-600' : 'text-secondary-600'">
+                {{ getPasswordStrength().level }}
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div [class]="'h-2 rounded-full ' +
+                           (getPasswordStrength().color === 'danger' ? 'bg-danger-500' :
+                            getPasswordStrength().color === 'warning' ? 'bg-warning-500' : 'bg-secondary-500')"
+                   [style.width.%]="getPasswordStrength().percentage"></div>
+            </div>
+          </div>
+          <p *ngIf="getFieldError('password')" class="mt-1 text-sm text-danger-600">{{ getFieldError('password') }}</p>
+        </div>
+
+        <!-- Confirm Password -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
+          <div class="relative">
+            <input [type]="showConfirmPassword() ? 'text' : 'password'" formControlName="confirmPassword" class="input-primary pr-10"
+                   [class.border-danger-500]="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
+            <button type="button" (click)="togglePasswordVisibility('confirm')" class="absolute right-3 top-3">
+              <svg *ngIf="!showConfirmPassword()" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+          <p *ngIf="getFieldError('confirmPassword')" class="mt-1 text-sm text-danger-600">{{ getFieldError('confirmPassword') }}</p>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" [disabled]="loading()" class="w-full btn-primary py-3 px-4 rounded-lg font-medium disabled:opacity-50">
+          <span *ngIf="!loading()">Create Account</span>
+          <div *ngIf="loading()" class="flex items-center justify-center">
+            <div class="loading-spinner w-5 h-5 mr-2"></div>
+            Creating Account...
+          </div>
+        </button>
+      </form>
+
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Already have an account?
+          <a routerLink="/auth/login" class="font-medium text-primary-600 hover:text-primary-500">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

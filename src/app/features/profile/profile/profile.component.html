@@ -1,0 +1,226 @@
+<div class="profile-container">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Profile</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-1">Manage your account information</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Profile Card -->
+    <div class="lg:col-span-1">
+      <div class="card text-center">
+        <div class="flex justify-center mb-4">
+          <div class="relative">
+            <img
+              [src]="profilePicturePreview() || currentUser()?.profilePicture || 'https://ui-avatars.com/api/?name=' + (currentUser()?.firstName || '') + '+' + (currentUser()?.lastName || '')"
+              [alt]="currentUser()?.firstName || 'User'"
+              class="w-32 h-32 rounded-full object-cover border-4 border-primary-200 dark:border-primary-800 mx-auto"
+            />
+            <label
+              *ngIf="editMode()"
+              class="absolute bottom-0 right-0 bg-primary-600 text-white rounded-full p-2 cursor-pointer hover:bg-primary-700 shadow-lg"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <input type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" />
+            </label>
+          </div>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+          {{ currentUser()?.firstName }} {{ currentUser()?.lastName }}
+        </h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">{{ currentUser()?.email }}</p>
+        <div class="flex items-center justify-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          </svg>
+          <span>Member since {{ currentUser()?.createdAt | date:'MMM yyyy' }}</span>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="card mt-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Stats</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Total Tasks</span>
+            <span class="font-semibold text-gray-900 dark:text-white">{{ userStats().total }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Completed</span>
+            <span class="font-semibold text-secondary-600 dark:text-secondary-400">{{ userStats().completed }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Completion Rate</span>
+            <span class="font-semibold text-gray-900 dark:text-white">{{ userStats().completionRate.toFixed(1) }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Details -->
+    <div class="lg:col-span-2">
+      <div class="card">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Profile Information</h3>
+          <button
+            *ngIf="!editMode()"
+            (click)="enableEditMode()"
+            class="btn-outline"
+          >
+            Edit Profile
+          </button>
+          <div *ngIf="editMode()" class="flex items-center space-x-2">
+            <button
+              (click)="cancelEdit()"
+              class="btn-ghost"
+            >
+              Cancel
+            </button>
+            <button
+              (click)="saveProfile()"
+              class="btn-primary"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+
+        <form [formGroup]="profileForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                First Name
+              </label>
+              <input
+                type="text"
+                formControlName="firstName"
+                [readonly]="!editMode()"
+                class="input-primary"
+                [class.bg-gray-50]="!editMode()"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Last Name
+              </label>
+              <input
+                type="text"
+                formControlName="lastName"
+                [readonly]="!editMode()"
+                class="input-primary"
+                [class.bg-gray-50]="!editMode()"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              formControlName="email"
+              [readonly]="!editMode()"
+              class="input-primary"
+              [class.bg-gray-50]="!editMode()"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              formControlName="phone"
+              [readonly]="!editMode()"
+              class="input-primary"
+              [class.bg-gray-50]="!editMode()"
+            />
+          </div>
+        </form>
+      </div>
+
+      <!-- Account Actions -->
+      <div class="card mt-6">
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Account Actions</h3>
+        <div class="space-y-4">
+          <button
+            (click)="openPasswordForm()"
+            class="w-full btn-outline text-left flex items-center justify-between"
+          >
+            <span>Change Password</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+          <button
+            (click)="exportData()"
+            class="w-full btn-outline text-left flex items-center justify-between"
+          >
+            <span>Export Data</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+          </button>
+          <button
+            (click)="deleteAccount()"
+            class="w-full btn-danger text-left flex items-center justify-between"
+          >
+            <span>Delete Account</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Change Modal -->
+  <div
+    *ngIf="showPasswordForm()"
+    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+    (click)="closePasswordForm()"
+  >
+    <div
+      class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Change Password</h2>
+      </div>
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Current Password
+          </label>
+          <input type="password" formControlName="currentPassword" class="input-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            New Password
+          </label>
+          <input type="password" formControlName="newPassword" class="input-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Confirm New Password
+          </label>
+          <input type="password" formControlName="confirmPassword" class="input-primary" />
+          <p *ngIf="passwordForm.errors?.['mismatch'] && passwordForm.get('confirmPassword')?.touched" class="mt-1 text-sm text-danger-600">
+            Passwords do not match
+          </p>
+        </div>
+        <div class="flex items-center justify-end space-x-3 pt-4">
+          <button type="button" (click)="closePasswordForm()" class="btn-ghost">Cancel</button>
+          <button type="submit" [disabled]="passwordForm.invalid" class="btn-primary">Change Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

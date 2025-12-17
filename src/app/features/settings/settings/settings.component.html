@@ -1,0 +1,234 @@
+<div class="settings-container">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-1">Customize your application preferences</p>
+  </div>
+
+  <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="space-y-6">
+    <!-- Appearance Settings -->
+    <div class="card">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Appearance</h2>
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Theme
+          </label>
+          <select formControlName="theme" class="input-primary">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="auto">Auto (System)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Font Size
+          </label>
+          <select formControlName="fontSize" class="input-primary">
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            View Density
+          </label>
+          <select formControlName="viewDensity" class="input-primary">
+            <option value="compact">Compact</option>
+            <option value="comfortable">Comfortable</option>
+            <option value="spacious">Spacious</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Settings -->
+    <div class="card">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Notifications</h2>
+      <form [formGroup]="notificationForm" class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Notifications</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Receive notifications for important events</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" formControlName="enabled" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Sound Alerts</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Play sound when notifications arrive</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" formControlName="sound" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Due Date Reminders</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Get notified before tasks are due</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" formControlName="dueDateReminders" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Overdue Alerts</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Get notified about overdue tasks</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" formControlName="overdueAlerts" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+          </label>
+        </div>
+
+        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Quiet Hours</label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Disable notifications during specific hours</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" formControlName="quietHoursEnabled" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            </label>
+          </div>
+          <div *ngIf="notificationForm.get('quietHoursEnabled')?.value" class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Time</label>
+              <input type="time" formControlName="quietHoursStart" class="input-primary" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Time</label>
+              <input type="time" formControlName="quietHoursEnd" class="input-primary" />
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Task Settings -->
+    <div class="card">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Task Preferences</h2>
+      <form [formGroup]="taskForm" class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Default View
+          </label>
+          <select formControlName="defaultView" class="input-primary">
+            <option value="list">List</option>
+            <option value="kanban">Kanban</option>
+            <option value="calendar">Calendar</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Default Priority
+          </label>
+          <select formControlName="defaultPriority" class="input-primary">
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Default Category
+          </label>
+          <select formControlName="defaultCategory" class="input-primary">
+            <option value="Work">Work</option>
+            <option value="Personal">Personal</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Health">Health</option>
+            <option value="Education">Education</option>
+            <option value="Custom">Custom</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-Archive Completed Tasks</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Automatically archive tasks after completion</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" formControlName="autoArchive" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+          </label>
+        </div>
+
+        <div *ngIf="taskForm.get('autoArchive')?.value">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Archive After (Days)
+          </label>
+          <input type="number" formControlName="archiveDays" min="1" max="365" class="input-primary" />
+        </div>
+      </form>
+    </div>
+
+    <!-- Data Management -->
+    <div class="card">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Data Management</h2>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Export Tasks</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Download your tasks as JSON or CSV</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button type="button" (click)="exportTasks()" class="btn-outline text-sm">
+              Export JSON
+            </button>
+            <button type="button" (click)="exportTasksCSV()" class="btn-outline text-sm">
+              Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Clear Completed Tasks</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Permanently delete all completed tasks</p>
+            </div>
+            <button type="button" (click)="clearCompletedTasks()" class="btn-danger text-sm">
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Reset All Data</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Permanently delete all tasks and reset the application</p>
+            </div>
+            <button type="button" (click)="resetAllData()" class="btn-danger text-sm">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="flex items-center justify-end space-x-3">
+      <button type="submit" class="btn-primary">
+        Save All Settings
+      </button>
+    </div>
+  </form>
+</div>
+
