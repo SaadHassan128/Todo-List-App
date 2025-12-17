@@ -116,14 +116,11 @@
   height: 100%;
   border-radius: 4px;
   transition: width 0.3s ease;
+  background: #3b82f6;
 }
 
 .todo-fill {
   background: #f59e0b;
-}
-
-.progress-fill {
-  background: #3b82f6;
 }
 
 .completed-fill {
