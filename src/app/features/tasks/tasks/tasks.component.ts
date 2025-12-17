@@ -2,6 +2,7 @@ import { Component, computed, signal, OnInit } from '@angular/core';
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { TaskService } from '../../../shared/services/task.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { Task, TaskFilters } from '../../../types/task.interface';
@@ -10,7 +11,7 @@ import { AuthService } from '../../../shared/services/auth.service';
 @Component({
   selector: 'app-tasks',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, DatePipe, TitleCasePipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, DatePipe, TitleCasePipe, DragDropModule],
   templateUrl: './tasks.component.html',
   styleUrl: './tasks.component.css'
 })
@@ -293,21 +294,16 @@ export class TasksComponent implements OnInit {
     this.searchQuery.set('');
   }
 
-  // Drag & drop handlers for Kanban view
-  onDragStart(event: DragEvent, taskId: string): void {
-    event.dataTransfer?.setData('text/plain', taskId);
-  }
-
-  onDragOver(event: DragEvent): void {
-    // Allow dropping by preventing default behaviour
-    event.preventDefault();
-  }
-
-  onDrop(event: DragEvent, status: 'todo' | 'in-progress' | 'completed'): void {
-    event.preventDefault();
-    const taskId = event.dataTransfer?.getData('text/plain');
-    if (taskId) {
-      this.updateTaskStatus(taskId, status);
+  // Drag & drop handler for Kanban view using Angular CDK (works on desktop & mobile)
+  onTaskDrop(event: CdkDragDrop<Task[]>, status: 'todo' | 'in-progress' | 'completed'): void {
+    const task: Task | undefined = event.item.data as Task | undefined;
+    if (!task) {
+      return;
+    }
+    
+    // Only update if the status actually changed
+    if (task.status !== status) {
+      this.updateTaskStatus(task.id, status);
     }
   }
 }
