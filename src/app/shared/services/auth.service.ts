@@ -181,6 +181,9 @@ export class AuthService {
             notifications: {
               enabled: true,
               sound: true,
+              dueDateReminders: true,
+              overdueAlerts: true,
+              achievementNotifications: true,
               quietHours: { start: '22:00', end: '08:00' }
             },
             tasks: {
@@ -193,6 +196,11 @@ export class AuthService {
             workingHours: {
               start: '09:00',
               end: '17:00'
+            },
+            appearance: {
+              accentColor: 'primary',
+              fontSize: 'medium',
+              viewDensity: 'comfortable'
             }
           }
         };

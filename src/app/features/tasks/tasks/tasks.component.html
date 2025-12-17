@@ -218,10 +218,16 @@
           To Do ({{ listTasks().todo.length }})
         </h2>
       </div>
-      <div class="space-y-3 min-h-[200px]">
+      <div
+        class="space-y-3 min-h-[200px]"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, 'todo')"
+      >
         <div
           *ngFor="let task of listTasks().todo"
           class="card cursor-move hover:shadow-lg transition-shadow"
+          draggable="true"
+          (dragstart)="onDragStart($event, task.id)"
         >
           <h3 class="font-semibold text-gray-900 dark:text-white mb-2">{{ task.title }}</h3>
           <p *ngIf="task.description" class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
@@ -256,10 +262,16 @@
           In Progress ({{ listTasks().inProgress.length }})
         </h2>
       </div>
-      <div class="space-y-3 min-h-[200px]">
+      <div
+        class="space-y-3 min-h-[200px]"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, 'in-progress')"
+      >
         <div
           *ngFor="let task of listTasks().inProgress"
           class="card cursor-move hover:shadow-lg transition-shadow"
+          draggable="true"
+          (dragstart)="onDragStart($event, task.id)"
         >
           <h3 class="font-semibold text-gray-900 dark:text-white mb-2">{{ task.title }}</h3>
           <p *ngIf="task.description" class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
@@ -294,10 +306,16 @@
           Completed ({{ listTasks().completed.length }})
         </h2>
       </div>
-      <div class="space-y-3 min-h-[200px]">
+      <div
+        class="space-y-3 min-h-[200px]"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, 'completed')"
+      >
         <div
           *ngFor="let task of listTasks().completed"
           class="card cursor-move hover:shadow-lg transition-shadow opacity-75"
+          draggable="true"
+          (dragstart)="onDragStart($event, task.id)"
         >
           <h3 class="font-semibold text-gray-900 dark:text-white mb-2 line-through">{{ task.title }}</h3>
           <p *ngIf="task.description" class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">

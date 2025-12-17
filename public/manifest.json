@@ -4,9 +4,9 @@
   "description": "A modern task management application",
   "icons": [
     {
-      "src": "favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "todo-icon-5.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {

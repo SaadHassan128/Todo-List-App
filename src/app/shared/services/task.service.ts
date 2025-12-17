@@ -24,9 +24,17 @@ export class TaskService {
   // Filtered tasks based on current user
   public readonly userTasks$ = computed(() => {
     const currentUser = this.authService.currentUser$();
-    if (!currentUser) return [];
+    const allTasks = this._tasks();
 
-    return this._tasks().filter(task => task.userId === currentUser.id);
+    // If no authenticated user, or if there are no user-specific tasks,
+    // fall back to returning all tasks in storage so the dashboard and
+    // tasks page always show existing data.
+    if (!currentUser) {
+      return allTasks;
+    }
+
+    const userTasks = allTasks.filter(task => task.userId === currentUser.id);
+    return userTasks.length > 0 ? userTasks : allTasks;
   });
 
   constructor(private authService: AuthService) {
@@ -34,6 +42,8 @@ export class TaskService {
   }
 
   private initializeTasks(): void {
+    const currentUser = this.authService.currentUser$();
+
     try {
       const storedTasks = localStorage.getItem(this.STORAGE_KEY);
       if (storedTasks) {
@@ -46,7 +56,17 @@ export class TaskService {
           dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
           reminderTimes: task.reminderTimes?.map((time: string) => new Date(time)) || []
         }));
+
         this._tasks.set(parsedTasks);
+
+        // Ensure every user starts with some demo tasks.
+        // If the current user has no tasks yet (but there may be tasks for other users),
+        // seed a few demo tasks for the current user so the dashboard is not empty.
+        if (currentUser && !parsedTasks.some((task: Task) => task.userId === currentUser.id)) {
+          const demoTasks = this.createDemoTasksForUser(currentUser.id);
+          this._tasks.update(tasksState => [...tasksState, ...demoTasks]);
+          this.saveTasks();
+        }
       } else {
         // Initialize with some demo tasks
         this.initializeDemoTasks();
@@ -61,10 +81,19 @@ export class TaskService {
     const currentUser = this.authService.currentUser$();
     if (!currentUser) return;
 
-    const demoTasks: Task[] = [
+    const demoTasks = this.createDemoTasksForUser(currentUser.id);
+
+    // Append demo tasks to any existing ones instead of replacing them,
+    // so previously stored data is preserved.
+    this._tasks.update(tasks => [...tasks, ...demoTasks]);
+    this.saveTasks();
+  }
+
+  private createDemoTasksForUser(userId: string): Task[] {
+    return [
       {
         id: this.generateId(),
-        userId: currentUser.id,
+        userId,
         title: 'Welcome to your TODO App!',
         description: 'This is your first task. Start by exploring the features.',
         category: 'Personal',
@@ -78,7 +107,7 @@ export class TaskService {
       },
       {
         id: this.generateId(),
-        userId: currentUser.id,
+        userId,
         title: 'Complete your profile',
         description: 'Update your profile information and preferences.',
         category: 'Personal',
@@ -94,9 +123,6 @@ export class TaskService {
         reminderTimes: []
       }
     ];
-
-    this._tasks.set(demoTasks);
-    this.saveTasks();
   }
 
   private calculateTaskStats(): TaskStats {

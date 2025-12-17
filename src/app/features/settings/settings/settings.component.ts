@@ -55,18 +55,18 @@ export class SettingsComponent implements OnInit {
     if (user?.settings) {
       this.settingsForm.patchValue({
         theme: user.settings.theme,
-        accentColor: 'primary',
-        fontSize: 'medium',
-        viewDensity: 'comfortable'
+        accentColor: user.settings.appearance?.accentColor ?? 'primary',
+        fontSize: user.settings.appearance?.fontSize ?? 'medium',
+        viewDensity: user.settings.appearance?.viewDensity ?? 'comfortable'
       });
 
       this.notificationForm.patchValue({
         enabled: user.settings.notifications.enabled,
         sound: user.settings.notifications.sound,
-        dueDateReminders: true,
-        overdueAlerts: true,
-        achievementNotifications: true,
-        quietHoursEnabled: false,
+        dueDateReminders: user.settings.notifications.dueDateReminders,
+        overdueAlerts: user.settings.notifications.overdueAlerts,
+        achievementNotifications: user.settings.notifications.achievementNotifications,
+        quietHoursEnabled: false, // stored flag is optional, UI controls quiet hours behaviour
         quietHoursStart: user.settings.notifications.quietHours.start,
         quietHoursEnd: user.settings.notifications.quietHours.end
       });
@@ -78,6 +78,9 @@ export class SettingsComponent implements OnInit {
         autoArchive: user.settings.tasks.autoArchive,
         archiveDays: user.settings.tasks.archiveDays
       });
+
+      // Apply theme immediately based on saved settings
+      this.applyTheme(user.settings.theme);
     }
   }
 
@@ -87,9 +90,17 @@ export class SettingsComponent implements OnInit {
       const updates = {
         settings: {
           theme: this.settingsForm.value.theme,
+          appearance: {
+            accentColor: this.settingsForm.value.accentColor,
+            fontSize: this.settingsForm.value.fontSize,
+            viewDensity: this.settingsForm.value.viewDensity
+          },
           notifications: {
             enabled: this.notificationForm.value.enabled,
             sound: this.notificationForm.value.sound,
+            dueDateReminders: this.notificationForm.value.dueDateReminders,
+            overdueAlerts: this.notificationForm.value.overdueAlerts,
+            achievementNotifications: this.notificationForm.value.achievementNotifications,
             quietHours: {
               start: this.notificationForm.value.quietHoursStart,
               end: this.notificationForm.value.quietHoursEnd
@@ -108,12 +119,37 @@ export class SettingsComponent implements OnInit {
 
       this.authService.updateProfile(updates).subscribe({
         next: () => {
+          this.applyTheme(this.settingsForm.value.theme);
           alert('Settings saved successfully!');
         },
         error: (err) => {
           alert('Error saving settings: ' + err.message);
         }
       });
+    }
+  }
+
+  private applyTheme(theme: 'light' | 'dark' | 'auto'): void {
+    const root = document.documentElement;
+
+    if (theme === 'light') {
+      root.classList.remove('dark');
+      return;
+    }
+
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      return;
+    }
+
+    // Auto: follow system preference
+    const prefersDark = window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (prefersDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
     }
   }
 

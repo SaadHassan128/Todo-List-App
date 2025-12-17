@@ -22,6 +22,8 @@ export class ProfileComponent implements OnInit {
   profileForm: FormGroup;
   passwordForm: FormGroup;
 
+  exportFormat = signal<'json' | 'csv'>('json');
+
   constructor(
     private authService: AuthService,
     private taskService: TaskService,
@@ -136,21 +138,51 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  exportData(): void {
+  exportData(format: 'json' | 'csv' = 'json'): void {
     const user = this.currentUser();
     const tasks = this.taskService.userTasks$();
-    const data = {
-      user,
-      tasks,
-      exportDate: new Date().toISOString()
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `todo-app-data-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+
+    if (format === 'csv') {
+      // Export tasks as CSV
+      const headers = ['Title', 'Description', 'Category', 'Priority', 'Status', 'Due Date', 'Tags', 'Created At'];
+      const rows = tasks.map(task => [
+        task.title,
+        task.description || '',
+        task.category,
+        task.priority,
+        task.status,
+        task.dueDate ? new Date(task.dueDate).toISOString() : '',
+        task.tags.join(';'),
+        new Date(task.createdAt).toISOString()
+      ]);
+
+      const csv = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `todo-app-data-${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      // Default JSON export (includes user and tasks)
+      const data = {
+        user,
+        tasks,
+        exportDate: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `todo-app-data-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   }
 
   deleteAccount(): void {

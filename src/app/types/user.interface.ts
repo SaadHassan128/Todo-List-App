@@ -15,6 +15,9 @@ export interface UserSettings {
   notifications: {
     enabled: boolean;
     sound: boolean;
+    dueDateReminders: boolean;
+    overdueAlerts: boolean;
+    achievementNotifications: boolean;
     quietHours: {
       start: string; // HH:MM
       end: string;   // HH:MM
@@ -30,6 +33,11 @@ export interface UserSettings {
   workingHours: {
     start: string; // HH:MM
     end: string;   // HH:MM
+  };
+  appearance?: {
+    accentColor: 'primary';
+    fontSize: 'small' | 'medium' | 'large';
+    viewDensity: 'compact' | 'comfortable';
   };
 }
 

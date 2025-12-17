@@ -158,14 +158,27 @@
             </svg>
           </button>
           <button
-            (click)="exportData()"
-            class="w-full btn-outline text-left flex items-center justify-between"
+            class="w-full btn-outline text-left flex items-center justify-between mb-2"
+            (click)="exportData(exportFormat())"
           >
-            <span>Export Data</span>
+            <span>Export Data ({{ exportFormat() | uppercase }})</span>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
             </svg>
           </button>
+          <div class="mt-1">
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Export Format
+            </label>
+            <select
+              class="input-primary text-sm"
+              [value]="exportFormat()"
+              (change)="exportFormat.set($any($event.target).value)"
+            >
+              <option value="json">JSON</option>
+              <option value="csv">CSV</option>
+            </select>
+          </div>
           <button
             (click)="deleteAccount()"
             class="w-full btn-danger text-left flex items-center justify-between"

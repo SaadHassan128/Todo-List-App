@@ -19,6 +19,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currentUser = computed(() => this.authService.currentUser$());
   dashboardStats = computed(() => this.dashboardService.dashboardStats$());
   quickStats = signal<{ title: string; value: number; icon: string; color: string; change: string | null }[]>([]);
+  showTasks = signal(false);
+  exportFormat = signal<'json' | 'csv'>('json');
+  allTasks = computed(() => this.taskService.userTasks$());
 
   // Chart configurations
   public taskStatusChartData!: ChartData<'doughnut'>;
@@ -425,6 +428,98 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const randomTask = demoTasks[Math.floor(Math.random() * demoTasks.length)];
     this.taskService.createTask(randomTask);
+  }
+
+  toggleTasksView(): void {
+    this.showTasks.set(!this.showTasks());
+  }
+
+  onViewTasksClick(button: HTMLButtonElement): void {
+    this.toggleTasksView();
+    button.textContent = this.showTasks() ? 'Hide Tasks' : 'View Tasks';
+  }
+
+  exportDashboardData(format: 'json' | 'csv' = 'json'): void {
+    const stats = this.dashboardStats();
+    const tasks = this.allTasks();
+    const weeklyProgress = stats.weeklyProgress;
+    const priorityStats = stats.priorityStats;
+
+    if (format === 'csv') {
+      const lines: string[] = [];
+
+      // Summary stats
+      lines.push('Summary Stats');
+      lines.push('Total,Completed,Pending,Overdue,Today,This Week,Completion Rate (%)');
+      lines.push([
+        stats.total,
+        stats.completed,
+        stats.pending,
+        stats.overdue,
+        stats.today,
+        stats.thisWeek,
+        stats.completionRate.toFixed(1)
+      ].join(','));
+      lines.push('');
+
+      // Weekly progress
+      lines.push('Weekly Progress');
+      lines.push('Day,Completed,Total');
+      weeklyProgress.forEach(day => {
+        lines.push([day.date, day.completed, day.total].join(','));
+      });
+      lines.push('');
+
+      // Priority distribution
+      lines.push('Priority Distribution');
+      lines.push('Priority,Count');
+      lines.push(['High', priorityStats.high].join(','));
+      lines.push(['Medium', priorityStats.medium].join(','));
+      lines.push(['Low', priorityStats.low].join(','));
+      lines.push('');
+
+      // Tasks table
+      lines.push('Tasks');
+      lines.push('Title,Description,Category,Priority,Status,Due Date,Tags,Created At');
+      tasks.forEach(task => {
+        const row = [
+          `"${task.title}"`,
+          `"${task.description || ''}"`,
+          `"${task.category}"`,
+          `"${task.priority}"`,
+          `"${task.status}"`,
+          `"${task.dueDate ? new Date(task.dueDate).toISOString() : ''}"`,
+          `"${task.tags.join(';')}"`,
+          `"${new Date(task.createdAt).toISOString()}"`
+        ];
+        lines.push(row.join(','));
+      });
+
+      const csvContent = lines.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dashboard-data-${Date.now()}.csv`
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const data = {
+        stats,
+        weeklyProgress,
+        priorityStats,
+        tasks,
+        exportDate: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dashboard-data-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   }
 
   getGreeting(): string {

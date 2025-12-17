@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TaskService } from '../../../shared/services/task.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { Task, TaskFilters } from '../../../types/task.interface';
+import { AuthService } from '../../../shared/services/auth.service';
 
 @Component({
   selector: 'app-tasks',
@@ -68,6 +69,7 @@ export class TasksComponent implements OnInit {
 
   constructor(
     private taskService: TaskService,
+    private authService: AuthService,
     private notificationService: NotificationService,
     private router: Router,
     private fb: FormBuilder
@@ -92,6 +94,15 @@ export class TasksComponent implements OnInit {
       if (task) {
         this.editTask(task);
       }
+    }
+
+    // Apply the user's preferred default view (list or kanban) for tasks
+    const user = this.authService.currentUser$();
+    const defaultView = user?.settings?.tasks?.defaultView;
+    if (defaultView === 'kanban') {
+      this.viewMode.set('kanban');
+    } else {
+      this.viewMode.set('list');
     }
   }
 
@@ -280,5 +291,23 @@ export class TasksComponent implements OnInit {
   clearFilters(): void {
     this.filters.set({});
     this.searchQuery.set('');
+  }
+
+  // Drag & drop handlers for Kanban view
+  onDragStart(event: DragEvent, taskId: string): void {
+    event.dataTransfer?.setData('text/plain', taskId);
+  }
+
+  onDragOver(event: DragEvent): void {
+    // Allow dropping by preventing default behaviour
+    event.preventDefault();
+  }
+
+  onDrop(event: DragEvent, status: 'todo' | 'in-progress' | 'completed'): void {
+    event.preventDefault();
+    const taskId = event.dataTransfer?.getData('text/plain');
+    if (taskId) {
+      this.updateTaskStatus(taskId, status);
+    }
   }
 }
