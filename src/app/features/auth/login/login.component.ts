@@ -21,10 +21,23 @@ export class LoginComponent {
     private authService: AuthService,
     private router: Router
   ) {
+    // Check if user was previously remembered
+    const storedAuth = localStorage.getItem('todo_app_auth');
+    let rememberMeChecked = false;
+
+    if (storedAuth) {
+      try {
+        const authData = JSON.parse(storedAuth);
+        rememberMeChecked = authData.rememberMe || false;
+      } catch (error) {
+        console.error('Error parsing stored auth data:', error);
+      }
+    }
+
     this.loginForm = this.fb.group({
       emailOrName: ['', [Validators.required, Validators.minLength(2)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      rememberMe: [false]
+      rememberMe: [rememberMeChecked]
     });
   }
 

@@ -1,9 +1,10 @@
 import { Component, computed, signal, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DashboardService } from '../../../shared/services/dashboard.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { TaskService } from '../../../shared/services/task.service';
+import { AlarmService } from '../../../shared/services/alarm.service';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { registerables } from 'chart.js';
@@ -21,7 +22,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
   quickStats = signal<{ title: string; value: number; icon: string; color: string; change: string | null }[]>([]);
   showTasks = signal(false);
   exportFormat = signal<'json' | 'csv'>('json');
-  allTasks = computed(() => this.taskService.userTasks$());
+
+  // Stats modal
+  showStatsModal = signal(false);
+  selectedStat = signal<{ title: string; value: number; icon: string; color: string; change: string | null } | null>(null);
+  allTasks = computed(() => {
+    const tasks = this.taskService.userTasks$();
+    // Sort by priority: high -> medium -> low
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    return tasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  });
+
+  // Computed signals for greeting and motivation
+  greeting = computed(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  });
+
+  motivationalMessage = computed(() => {
+    const stats = this.dashboardStats();
+    if (stats.completionRate > 80) {
+      return 'Outstanding! You\'re crushing your goals. Keep the momentum going! 🚀';
+    } else if (stats.completionRate > 60) {
+      return 'Great progress! You\'re on the right track. Stay focused! 💪';
+    } else if (stats.completionRate > 30) {
+      return 'Good start! Every completed task brings you closer to your goals. 📈';
+    } else {
+      return 'Let\'s get started! Small steps lead to big achievements. 🌟';
+    }
+  });
 
   // Chart configurations
   public taskStatusChartData!: ChartData<'doughnut'>;
@@ -43,24 +74,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private dashboardService: DashboardService,
     private authService: AuthService,
-    private taskService: TaskService
+    private taskService: TaskService,
+    private alarmService: AlarmService,
+    private router: Router
   ) {
     // Initialize quick stats
     this.quickStats.set(this.dashboardService.getQuickStats());
-  }
 
-  ngOnInit(): void {
-    // Register Chart.js components
-    Chart.register(...registerables);
-    
-    this.initializeCharts();
-    
     // Update charts when stats change using effect
     effect(() => {
       // Access dashboardStats to create dependency
       const stats = this.dashboardStats();
       this.updateCharts();
     });
+  }
+
+  ngOnInit(): void {
+    // Register Chart.js components
+    Chart.register(...registerables);
+
+    this.initializeCharts();
 
     // Watch for theme changes
     const observer = new MutationObserver(() => {
@@ -397,7 +430,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         tags: ['documentation', 'review'],
         subtasks: [],
         attachments: [],
-        reminderTimes: []
+        reminderTimes: [],
+        alarmEnabled: false
       },
       {
         title: 'Team meeting preparation',
@@ -411,7 +445,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           { id: '2', title: 'Prepare presentation slides', completed: false, createdAt: new Date() }
         ],
         attachments: [],
-        reminderTimes: []
+        reminderTimes: [],
+        alarmEnabled: false
       },
       {
         title: 'Grocery shopping',
@@ -422,7 +457,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         tags: ['shopping', 'personal'],
         subtasks: [],
         attachments: [],
-        reminderTimes: []
+        reminderTimes: [],
+        alarmEnabled: false
       }
     ];
 
@@ -430,8 +466,147 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.taskService.createTask(randomTask);
   }
 
+  testReminder(): void {
+    // Get the first task to test reminder popup
+    const allTasks = this.taskService.userTasks$();
+    if (allTasks.length > 0) {
+      const firstTask = allTasks[0];
+      this.alarmService.testReminder(firstTask.id);
+    } else {
+      // Create a demo task first
+      this.createDemoTask();
+      // Wait a bit then test reminder
+      setTimeout(() => {
+        const tasks = this.taskService.userTasks$();
+        if (tasks.length > 0) {
+          this.alarmService.testReminder(tasks[0].id);
+        }
+      }, 500);
+    }
+  }
+
   toggleTasksView(): void {
     this.showTasks.set(!this.showTasks());
+  }
+
+  onStatClick(stat: { title: string; value: number; icon: string; color: string; change: string | null }): void {
+    this.selectedStat.set(stat);
+    this.showStatsModal.set(true);
+  }
+
+  closeStatsModal(): void {
+    this.showStatsModal.set(false);
+    this.selectedStat.set(null);
+  }
+
+  navigateToTasks(filter?: string | null): void {
+    this.closeStatsModal();
+    // Navigate to tasks page with filter
+    this.router.navigate(['/tasks'], {
+      queryParams: filter ? { filter } : {}
+    });
+  }
+
+  getStatDetails(stat: { title: string; value: number; icon: string; color: string; change: string | null } | null) {
+    if (!stat) return null;
+
+    const stats = this.dashboardStats();
+    const allTasks = this.allTasks();
+
+    switch (stat.title) {
+      case 'Total Tasks':
+        return {
+          title: 'Total Tasks Overview',
+          description: `You have ${stat.value} tasks in total across all categories.`,
+          details: [
+            `High Priority: ${allTasks.filter(t => t.priority === 'high').length}`,
+            `Medium Priority: ${allTasks.filter(t => t.priority === 'medium').length}`,
+            `Low Priority: ${allTasks.filter(t => t.priority === 'low').length}`,
+            `Work Category: ${allTasks.filter(t => t.category === 'Work').length}`,
+            `Personal Category: ${allTasks.filter(t => t.category === 'Personal').length}`
+          ],
+          filter: null
+        };
+
+      case 'Completed':
+        const completionRate = stats.total > 0 ? ((stats.completed / stats.total) * 100) : 0;
+        return {
+          title: 'Completed Tasks',
+          description: `You've successfully completed ${stat.value} tasks (${completionRate.toFixed(1)}% completion rate). Keep up the great work!`,
+          details: [
+            `Recent completions: ${allTasks.filter(t => t.status === 'completed' && this.isRecent(t.createdAt)).length}`,
+            `High priority completed: ${allTasks.filter(t => t.status === 'completed' && t.priority === 'high').length}`,
+            `This week's completions: ${allTasks.filter(t => t.status === 'completed' && this.isThisWeek(t.completedAt)).length}`
+          ],
+          filter: 'completed'
+        };
+
+      case 'In Progress':
+        return {
+          title: 'Tasks In Progress',
+          description: `You currently have ${stat.value} tasks actively being worked on.`,
+          details: [
+            `High priority in progress: ${allTasks.filter(t => t.status === 'in-progress' && t.priority === 'high').length}`,
+            `Due this week: ${allTasks.filter(t => t.status === 'in-progress' && this.isDueThisWeek(t.dueDate)).length}`,
+            `Overdue active tasks: ${allTasks.filter(t => t.status === 'in-progress' && this.isOverdue(t.dueDate)).length}`
+          ],
+          filter: 'in-progress'
+        };
+
+      case 'Overdue':
+        return {
+          title: 'Overdue Tasks',
+          description: `You have ${stat.value} overdue tasks that need immediate attention.`,
+          details: [
+            `Overdue high priority: ${allTasks.filter(t => this.isOverdue(t.dueDate) && t.priority === 'high').length}`,
+            `Overdue this week: ${allTasks.filter(t => this.isOverdue(t.dueDate) && this.isDueThisWeek(t.dueDate)).length}`,
+            `Total overdue days: ${this.getTotalOverdueDays(allTasks)}`
+          ],
+          filter: 'overdue'
+        };
+
+      default:
+        return null;
+    }
+  }
+
+  private isRecent(date: Date | undefined): boolean {
+    if (!date) return false;
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+  }
+
+  private isThisWeek(date: Date | undefined): boolean {
+    if (!date) return false;
+    const now = new Date();
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    return date >= startOfWeek && date <= endOfWeek;
+  }
+
+  private isDueThisWeek(date: Date | undefined): boolean {
+    return this.isThisWeek(date);
+  }
+
+  private isOverdue(date: Date | undefined): boolean {
+    if (!date) return false;
+    return date < new Date();
+  }
+
+  private getTotalOverdueDays(tasks: any[]): number {
+    return tasks
+      .filter(t => this.isOverdue(t.dueDate))
+      .reduce((total, task) => {
+        if (task.dueDate) {
+          const diffTime = Math.abs(new Date().getTime() - task.dueDate.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return total + diffDays;
+        }
+        return total;
+      }, 0);
   }
 
   onViewTasksClick(button: HTMLButtonElement): void {
@@ -522,24 +697,4 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  getGreeting(): string {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  }
-
-  getMotivationalMessage(): string {
-    const stats = this.dashboardStats();
-    if (stats.completionRate > 80) {
-      return 'Excellent progress! Keep up the great work!';
-    }
-    if (stats.completionRate > 50) {
-      return 'Good progress! You\'re on the right track.';
-    }
-    if (stats.overdue > 0) {
-      return 'Let\'s focus on completing those overdue tasks.';
-    }
-    return 'Ready to tackle some tasks today?';
-  }
 }

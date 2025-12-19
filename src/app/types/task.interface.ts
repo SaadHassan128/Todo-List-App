@@ -7,6 +7,7 @@ export interface Task {
   priority: 'high' | 'medium' | 'low';
   status: 'todo' | 'in-progress' | 'completed';
   dueDate?: Date;
+  dueTime?: string; // HH:MM format
   tags: string[];
   subtasks: SubTask[];
   attachments: Attachment[];
@@ -15,6 +16,10 @@ export interface Task {
   estimatedTime?: number; // in minutes
   actualTimeSpent?: number; // in minutes
   reminderTimes: Date[];
+  recurrence?: RecurrenceSettings;
+  alarmEnabled: boolean;
+  alarmSound?: string;
+  lastNotified?: Date;
 }
 
 export interface SubTask {
@@ -61,4 +66,13 @@ export interface CalendarEvent {
   date: Date;
   task: Task;
   type: 'due-date' | 'reminder' | 'completed';
+}
+
+export interface RecurrenceSettings {
+  type: 'daily' | 'weekly' | 'monthly';
+  interval: number; // e.g., every 2 days, every 3 weeks, every 1 month
+  duration: number; // how many times to repeat (0 = infinite)
+  endDate?: Date; // alternative to duration
+  daysOfWeek?: number[]; // for weekly: [0,1,2,3,4,5,6] where 0=Sunday
+  dayOfMonth?: number; // for monthly: 1-31
 }

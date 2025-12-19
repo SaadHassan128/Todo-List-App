@@ -2,31 +2,38 @@
   <!-- Header -->
   <div class="dashboard-header">
     <div class="greeting-section">
-      <h1>{{ getGreeting() }}, {{ currentUser()?.firstName || 'User' }}! 👋</h1>
-      <p class="motivational-text">{{ getMotivationalMessage() }}</p>
+      <h1>{{ greeting() }}, {{ currentUser()?.firstName || 'User' }}! 👋</h1>
+      <p class="motivational-text">{{ motivationalMessage() }}</p>
     </div>
-    <div class="header-actions">
-      <div class="flex items-center space-x-3">
-        <button class="btn-primary" (click)="createDemoTask()">Add Demo Task</button>
-        <button
-          #viewTasksBtn
-          class="btn-outline whitespace-nowrap"
-          (click)="onViewTasksClick(viewTasksBtn)"
-        >
-          View Tasks
-        </button>
-        <div class="flex items-center space-x-2">
-          <select
-            class="input-primary text-sm"
-            [value]="exportFormat()"
-            (change)="exportFormat.set($any($event.target).value)"
+    <div class="header-actions w-full">
+      <div class="flex flex-col gap-3 w-full">
+        <!-- First Row: Add Demo Task and Test Reminder -->
+        <div class="flex flex-col sm:flex-row gap-3 w-full">
+          <button class="btn-primary flex-1 min-h-[44px] text-sm sm:text-base" (click)="createDemoTask()">Add Demo Task</button>
+          <button class="btn-outline flex-1 min-h-[44px] text-sm sm:text-base" (click)="testReminder()">Test Reminder</button>
+        </div>
+        <!-- Second Row: View Tasks and Export Section -->
+        <div class="flex flex-col sm:flex-row gap-3 w-full">
+          <button
+            #viewTasksBtn
+            class="btn-outline flex-1 sm:flex-initial min-h-[44px] text-sm sm:text-base whitespace-nowrap"
+            (click)="onViewTasksClick(viewTasksBtn)"
           >
-            <option value="json">JSON</option>
-            <option value="csv">CSV</option>
-          </select>
-          <button class="btn-outline" (click)="exportDashboardData(exportFormat())">
-            Export Data
+            View Tasks
           </button>
+          <div class="flex flex-col xs:flex-row gap-2 flex-1 sm:flex-initial min-w-0">
+            <select
+              class="input-primary text-sm flex-1 min-h-[44px] px-3"
+              [value]="exportFormat()"
+              (change)="exportFormat.set($any($event.target).value)"
+            >
+              <option value="json">JSON</option>
+              <option value="csv">CSV</option>
+            </select>
+            <button class="btn-outline flex-1 xs:flex-initial min-h-[44px] text-sm whitespace-nowrap px-4" (click)="exportDashboardData(exportFormat())">
+              Export Data
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -36,12 +43,20 @@
   <div *ngIf="showTasks()">
     <!-- Quick Stats Cards -->
     <div class="stats-grid">
-      <div *ngFor="let stat of quickStats()" class="stat-card" [ngClass]="'stat-' + stat.color">
+      <div
+        *ngFor="let stat of quickStats()"
+        class="stat-card cursor-pointer hover:scale-105 transition-all duration-200"
+        [ngClass]="'stat-' + stat.color"
+        (click)="onStatClick(stat)"
+      >
         <div class="stat-icon">{{ stat.icon }}</div>
         <div class="stat-content">
           <h3 class="stat-value">{{ stat.value }}</h3>
           <p class="stat-title">{{ stat.title }}</p>
           <span *ngIf="stat.change" class="stat-change">{{ stat.change }}</span>
+          <div class="stat-hint">
+            Click for details →
+          </div>
         </div>
       </div>
     </div>
@@ -193,13 +208,80 @@
             <div class="progress-bar">
               <div
                 class="progress-fill"
-                [style.width.%]="(category.completed / mathMax(category.count, 1)) * 100"
+                [style.width.%]="(category.completed / (category.count || 1)) * 100"
               ></div>
             </div>
             <span class="progress-text"
               >{{ category.completed }}/{{ category.count }} completed</span
             >
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Details Modal -->
+  <div
+    *ngIf="showStatsModal()"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    (click)="closeStatsModal()"
+  >
+    <div
+      *ngIf="getStatDetails(selectedStat()) as details"
+      class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-primary-500 to-secondary-500 p-6 text-white">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <span class="text-2xl">{{ selectedStat()?.icon }}</span>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold">{{ details.title }}</h2>
+              <p class="text-primary-100 text-sm">{{ selectedStat()?.title }} • {{ selectedStat()?.value }}</p>
+            </div>
+          </div>
+          <button
+            (click)="closeStatsModal()"
+            class="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+          {{ details.description }}
+        </p>
+
+        <div class="space-y-3 mb-6">
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Key Insights:</h3>
+          <div *ngFor="let detail of details.details" class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div class="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0"></div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">{{ detail }}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex space-x-3">
+          <button
+            (click)="navigateToTasks(details.filter)"
+            class="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
+          >
+            View {{ selectedStat()?.title }} Tasks →
+          </button>
+          <button
+            (click)="closeStatsModal()"
+            class="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

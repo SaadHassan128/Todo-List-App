@@ -141,6 +141,73 @@
               [class.bg-gray-50]="!editMode()"
             />
           </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Gender
+            </label>
+            <select
+              formControlName="gender"
+              [disabled]="!editMode()"
+              class="input-primary"
+              [class.bg-gray-50]="!editMode()"
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              formControlName="dateOfBirth"
+              [disabled]="!editMode()"
+              class="input-primary"
+              [class.bg-gray-50]="!editMode()"
+              [max]="getMaxDate()"
+              placeholder="Select your birth date"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              We'll send you a special birthday reminder! 🎂
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Role/Title
+            </label>
+            <select
+              formControlName="role"
+              [disabled]="!editMode()"
+              class="input-primary"
+              [class.bg-gray-50]="!editMode()"
+              (change)="onRoleChange($event)"
+            >
+              <option value="">Select your role</option>
+              <option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
+            </select>
+          </div>
+
+          <div *ngIf="showCustomRole()">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Custom Title
+            </label>
+            <input
+              type="text"
+              formControlName="customRole"
+              [readonly]="!editMode()"
+              class="input-primary"
+              [class.bg-gray-50]="!editMode()"
+              placeholder="Enter your custom title"
+            />
+            <p *ngIf="profileForm.get('customRole')?.invalid && profileForm.get('customRole')?.touched" class="mt-1 text-sm text-danger-600">
+              Custom title must be 2-50 characters long
+            </p>
+          </div>
         </form>
       </div>
 

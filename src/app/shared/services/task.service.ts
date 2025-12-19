@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Task, TaskFilters, TaskStats } from '../../types/task.interface';
+import { Task, TaskFilters, TaskStats, RecurrenceSettings } from '../../types/task.interface';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -54,7 +54,10 @@ export class TaskService {
           createdAt: new Date(task.createdAt),
           completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
           dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-          reminderTimes: task.reminderTimes?.map((time: string) => new Date(time)) || []
+          reminderTimes: task.reminderTimes?.map((time: string) => new Date(time)) || [],
+          lastNotified: task.lastNotified ? new Date(task.lastNotified) : undefined,
+          alarmEnabled: task.alarmEnabled ?? false,
+          recurrence: task.recurrence || undefined
         }));
 
         this._tasks.set(parsedTasks);
@@ -103,7 +106,8 @@ export class TaskService {
         subtasks: [],
         attachments: [],
         createdAt: new Date(),
-        reminderTimes: []
+        reminderTimes: [],
+        alarmEnabled: false
       },
       {
         id: this.generateId(),
@@ -120,7 +124,8 @@ export class TaskService {
         ],
         attachments: [],
         createdAt: new Date(),
-        reminderTimes: []
+        reminderTimes: [],
+        alarmEnabled: false
       }
     ];
   }
@@ -333,5 +338,104 @@ export class TaskService {
     }
 
     return deletedCount;
+  }
+
+  // Recurring tasks methods
+  generateRecurringTasks(baseTask: Task): Task[] {
+    if (!baseTask.recurrence || !baseTask.dueDate) return [];
+
+    const recurringTasks: Task[] = [];
+    const recurrence = baseTask.recurrence;
+    let currentDate = new Date(baseTask.dueDate);
+    const maxOccurrences = recurrence.duration > 0 ? recurrence.duration : 10; // Default to 10 if infinite
+
+    for (let i = 1; i <= maxOccurrences; i++) {
+      switch (recurrence.type) {
+        case 'daily':
+          currentDate.setDate(currentDate.getDate() + recurrence.interval);
+          break;
+        case 'weekly':
+          if (recurrence.daysOfWeek && recurrence.daysOfWeek.length > 0) {
+            // Handle specific days of week
+            const currentDayOfWeek = currentDate.getDay();
+            const nextDay = recurrence.daysOfWeek.find(day => day > currentDayOfWeek);
+            if (nextDay !== undefined) {
+              currentDate.setDate(currentDate.getDate() + (nextDay - currentDayOfWeek));
+            } else {
+              // Wrap to next week
+              currentDate.setDate(currentDate.getDate() + (7 - currentDayOfWeek + recurrence.daysOfWeek[0]));
+            }
+          } else {
+            currentDate.setDate(currentDate.getDate() + (recurrence.interval * 7));
+          }
+          break;
+        case 'monthly':
+          currentDate.setMonth(currentDate.getMonth() + recurrence.interval);
+          break;
+      }
+
+      // Check if we've exceeded the end date
+      if (recurrence.endDate && currentDate > recurrence.endDate) break;
+
+      const newTask: Task = {
+        ...baseTask,
+        id: this.generateId(),
+        title: `${baseTask.title} (${i + 1})`,
+        dueDate: new Date(currentDate),
+        status: 'todo',
+        createdAt: new Date(),
+        completedAt: undefined,
+        subtasks: baseTask.subtasks.map(subtask => ({
+          ...subtask,
+          id: this.generateId(),
+          completed: false,
+          createdAt: new Date()
+        })),
+        lastNotified: undefined
+      };
+
+      recurringTasks.push(newTask);
+    }
+
+    return recurringTasks;
+  }
+
+  // Alarm and notification methods
+  checkForDueTasks(): Task[] {
+    const userTasks = this.userTasks$();
+    const now = new Date();
+    const nextHour = new Date(now.getTime() + 60 * 60 * 1000);
+
+    return userTasks.filter(task => {
+      if (!task.dueDate || !task.alarmEnabled || task.status === 'completed') return false;
+
+      const dueDateTime = this.combineDateAndTime(task.dueDate, task.dueTime);
+      return dueDateTime >= now && dueDateTime <= nextHour;
+    });
+  }
+
+  private combineDateAndTime(date: Date, time?: string): Date {
+    const combined = new Date(date);
+    if (time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      combined.setHours(hours, minutes, 0, 0);
+    }
+    return combined;
+  }
+
+  updateLastNotified(taskId: string): void {
+    this.updateTask(taskId, { lastNotified: new Date() });
+  }
+
+  // Priority sorting helper
+  sortTasksByPriority(tasks: Task[]): Task[] {
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    return [...tasks].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  }
+
+  // Get tasks sorted by priority
+  getTasksSortedByPriority(filters?: TaskFilters): Task[] {
+    const filteredTasks = this.getFilteredTasks(filters);
+    return this.sortTasksByPriority(filteredTasks);
   }
 }

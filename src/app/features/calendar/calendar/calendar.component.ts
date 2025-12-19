@@ -17,7 +17,12 @@ export class CalendarComponent {
   showTaskModal = signal(false);
   selectedDateTasks = signal<Task[]>([]);
 
-  allTasks = computed(() => this.taskService.userTasks$());
+  allTasks = computed(() => {
+    const tasks = this.taskService.userTasks$();
+    // Sort by priority: high -> medium -> low
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    return tasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  });
 
   calendarDays = computed(() => {
     const date = this.currentDate();
@@ -152,6 +157,28 @@ export class CalendarComponent {
         return 'bg-primary-500';
       case 'completed':
         return 'bg-secondary-500';
+    }
+  }
+
+  getStatusBadgeColor(status: 'todo' | 'in-progress' | 'completed'): string {
+    switch (status) {
+      case 'todo':
+        return 'bg-gray-600';
+      case 'in-progress':
+        return 'bg-blue-600';
+      case 'completed':
+        return 'bg-green-600';
+    }
+  }
+
+  getStatusShortLabel(status: 'todo' | 'in-progress' | 'completed'): string {
+    switch (status) {
+      case 'todo':
+        return 'TODO';
+      case 'in-progress':
+        return 'IN PROGRESS';
+      case 'completed':
+        return 'DONE';
     }
   }
 }

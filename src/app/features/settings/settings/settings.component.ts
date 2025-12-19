@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { AuthService } from '../../../shared/services/auth.service';
 import { TaskService } from '../../../shared/services/task.service';
+import { OnboardingService } from '../../../shared/services/onboarding';
+import { NotificationPopupService } from '../../../shared/services/notification-popup.service';
 
 @Component({
   selector: 'app-settings',
@@ -21,6 +23,8 @@ export class SettingsComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private taskService: TaskService,
+    private onboardingService: OnboardingService,
+    private notificationPopupService: NotificationPopupService,
     private fb: FormBuilder
   ) {
     this.settingsForm = this.fb.group({
@@ -51,6 +55,9 @@ export class SettingsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Mark settings as visited for onboarding
+    this.onboardingService.markSettingsVisited();
+
     const user = this.currentUser();
     if (user?.settings) {
       this.settingsForm.patchValue({
@@ -120,10 +127,20 @@ export class SettingsComponent implements OnInit {
       this.authService.updateProfile(updates).subscribe({
         next: () => {
           this.applyTheme(this.settingsForm.value.theme);
-          alert('Settings saved successfully!');
+          this.notificationPopupService.show({
+            type: 'task-updated',
+            title: 'Settings Saved! ⚙️',
+            message: 'Your settings have been successfully updated.',
+            taskTitle: '',
+          });
         },
         error: (err) => {
-          alert('Error saving settings: ' + err.message);
+          this.notificationPopupService.show({
+            type: 'task-updated',
+            title: 'Error Saving Settings',
+            message: 'There was an error saving your settings: ' + err.message,
+            taskTitle: '',
+          });
         }
       });
     }

@@ -254,6 +254,7 @@ export class AuthService {
         users[userIndex] = { ...users[userIndex], ...updates };
         this.saveUsers(users);
 
+        // Update the auth state with the new user data
         this._authState.update(state => ({
           ...state,
           user: users[userIndex]

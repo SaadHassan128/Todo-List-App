@@ -171,9 +171,16 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
                 <span *ngIf="task.dueDate">
-                  Due: {{ task.dueDate | date:'short' }}
+                  Due: {{ task.dueDate | date:'shortDate' }}
+                  <span *ngIf="task.dueTime" class="ml-1">at {{ task.dueTime }}</span>
                 </span>
                 <span *ngIf="!task.dueDate">No due date</span>
+                <span *ngIf="task.recurrence" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
+                  {{ getRecurrenceLabel(task.recurrence) }}
+                </span>
+                <span *ngIf="task.alarmEnabled" class="ml-1 text-yellow-500" title="Alarm enabled">
+                  🔔
+                </span>
               </div>
             </div>
             <div class="flex items-center space-x-2 ml-4">
@@ -211,36 +218,62 @@
 
   <!-- Kanban View -->
   <div *ngIf="viewMode() === 'kanban'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Drag & Drop Instructions -->
+    <div class="md:col-span-3 mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-blue-900 dark:text-blue-100">Drag & Drop Tasks</h3>
+          <p class="text-sm text-blue-700 dark:text-blue-300">Move tasks between columns to change their status. You'll be asked to confirm each change.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- To Do Column -->
     <div class="space-y-4">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
           To Do ({{ listTasks().todo.length }})
         </h2>
+        <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
       </div>
       <div
         cdkDropList
         id="todo-list"
         [cdkDropListData]="listTasks().todo"
+        [cdkDropListConnectedTo]="kanbanDropLists"
         (cdkDropListDropped)="onTaskDrop($event, 'todo')"
-        class="space-y-3 min-h-[200px] p-2 rounded-lg"
-        [class.bg-gray-50]="false"
-        [class.dark:bg-gray-800/30]="false"
+        class="space-y-3 min-h-[200px] p-2 rounded-lg bg-gray-50 dark:bg-gray-800/30 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-150"
       >
         <div
           *ngFor="let task of listTasks().todo"
           cdkDrag
           [cdkDragData]="task"
-          class="card cursor-move hover:shadow-lg transition-shadow"
+          class="card cursor-move hover:shadow-lg transition-all duration-150 hover:scale-102"
+          cdkDragPreviewClass="drag-preview"
         >
           <h3 class="font-semibold text-gray-900 dark:text-white mb-2">{{ task.title }}</h3>
           <p *ngIf="task.description" class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
             {{ task.description }}
           </p>
           <div class="flex items-center justify-between">
-            <span [class]="'px-2 py-1 rounded-md text-xs font-medium ' + getPriorityColor(task.priority)">
-              {{ task.priority | titlecase }}
-            </span>
+            <div class="flex items-center space-x-2">
+              <span [class]="'px-2 py-1 rounded-md text-xs font-medium ' + getPriorityColor(task.priority)">
+                {{ task.priority | titlecase }}
+              </span>
+              <div class="flex items-center space-x-1 text-gray-400">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                </svg>
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                </svg>
+              </div>
+            </div>
             <div class="flex items-center space-x-2">
               <button
                 (click)="editTask(task); $event.stopPropagation()"
@@ -266,30 +299,41 @@
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
           In Progress ({{ listTasks().inProgress.length }})
         </h2>
+        <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
       </div>
       <div
         cdkDropList
         id="inprogress-list"
         [cdkDropListData]="listTasks().inProgress"
+        [cdkDropListConnectedTo]="kanbanDropLists"
         (cdkDropListDropped)="onTaskDrop($event, 'in-progress')"
-        class="space-y-3 min-h-[200px] p-2 rounded-lg"
-        [class.bg-gray-50]="false"
-        [class.dark:bg-gray-800/30]="false"
+        class="space-y-3 min-h-[200px] p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-200 dark:border-blue-700 hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-150"
       >
         <div
           *ngFor="let task of listTasks().inProgress"
           cdkDrag
           [cdkDragData]="task"
-          class="card cursor-move hover:shadow-lg transition-shadow"
+          class="card cursor-move hover:shadow-lg transition-all duration-150 hover:scale-102"
+          cdkDragPreviewClass="drag-preview"
         >
           <h3 class="font-semibold text-gray-900 dark:text-white mb-2">{{ task.title }}</h3>
           <p *ngIf="task.description" class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
             {{ task.description }}
           </p>
           <div class="flex items-center justify-between">
-            <span [class]="'px-2 py-1 rounded-md text-xs font-medium ' + getPriorityColor(task.priority)">
-              {{ task.priority | titlecase }}
-            </span>
+            <div class="flex items-center space-x-2">
+              <span [class]="'px-2 py-1 rounded-md text-xs font-medium ' + getPriorityColor(task.priority)">
+                {{ task.priority | titlecase }}
+              </span>
+              <div class="flex items-center space-x-1 text-gray-400">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                </svg>
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                </svg>
+              </div>
+            </div>
             <div class="flex items-center space-x-2">
               <button
                 (click)="editTask(task); $event.stopPropagation()"
@@ -315,30 +359,41 @@
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
           Completed ({{ listTasks().completed.length }})
         </h2>
+        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
       </div>
       <div
         cdkDropList
         id="completed-list"
         [cdkDropListData]="listTasks().completed"
+        [cdkDropListConnectedTo]="kanbanDropLists"
         (cdkDropListDropped)="onTaskDrop($event, 'completed')"
-        class="space-y-3 min-h-[200px] p-2 rounded-lg"
-        [class.bg-gray-50]="false"
-        [class.dark:bg-gray-800/30]="false"
+        class="space-y-3 min-h-[200px] p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border-2 border-dashed border-green-200 dark:border-green-700 hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-150"
       >
         <div
           *ngFor="let task of listTasks().completed"
           cdkDrag
           [cdkDragData]="task"
-          class="card cursor-move hover:shadow-lg transition-shadow opacity-75"
+          class="card cursor-move hover:shadow-lg transition-all duration-200 hover:scale-105 opacity-75"
+          cdkDragPreviewClass="drag-preview"
         >
           <h3 class="font-semibold text-gray-900 dark:text-white mb-2 line-through">{{ task.title }}</h3>
           <p *ngIf="task.description" class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
             {{ task.description }}
           </p>
           <div class="flex items-center justify-between">
-            <span [class]="'px-2 py-1 rounded-md text-xs font-medium ' + getPriorityColor(task.priority)">
-              {{ task.priority | titlecase }}
-            </span>
+            <div class="flex items-center space-x-2">
+              <span [class]="'px-2 py-1 rounded-md text-xs font-medium ' + getPriorityColor(task.priority)">
+                {{ task.priority | titlecase }}
+              </span>
+              <div class="flex items-center space-x-1 text-gray-400">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                </svg>
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                </svg>
+              </div>
+            </div>
             <div class="flex items-center space-x-2">
               <button
                 (click)="editTask(task); $event.stopPropagation()"
@@ -369,23 +424,23 @@
       class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar"
       (click)="$event.stopPropagation()"
     >
-      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
         <div class="flex items-center justify-between">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 class="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
             {{ editingTask() ? 'Edit Task' : 'Create New Task' }}
           </h2>
           <button
             (click)="closeTaskForm()"
             class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
       </div>
 
-      <form [formGroup]="taskForm" (ngSubmit)="saveTask()" class="p-6 space-y-6">
+      <form [formGroup]="taskForm" (ngSubmit)="saveTask()" class="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Title <span class="text-danger-500">*</span>
@@ -413,7 +468,7 @@
           ></textarea>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Category <span class="text-danger-500">*</span>
@@ -435,7 +490,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Status <span class="text-danger-500">*</span>
@@ -456,6 +511,124 @@
               formControlName="dueDate"
               class="input-primary"
             />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Due Time
+            </label>
+            <input
+              type="time"
+              formControlName="dueTime"
+              class="input-primary"
+            />
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="alarmEnabled"
+              formControlName="alarmEnabled"
+              class="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+            />
+            <label for="alarmEnabled" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Enable Alarm
+            </label>
+          </div>
+        </div>
+
+        <!-- Recurring Tasks Section -->
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+          <div class="flex items-center space-x-2 mb-4">
+            <input
+              type="checkbox"
+              id="recurrenceEnabled"
+              formControlName="recurrenceEnabled"
+              class="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+            />
+            <label for="recurrenceEnabled" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Make this a recurring task
+            </label>
+          </div>
+
+          <div *ngIf="taskForm.get('recurrenceEnabled')?.value" class="space-y-4 ml-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Repeat
+                </label>
+                <select formControlName="recurrenceType" class="input-primary">
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Every
+                </label>
+                <input
+                  type="number"
+                  formControlName="recurrenceInterval"
+                  min="1"
+                  class="input-primary"
+                  placeholder="1"
+                />
+                <span class="text-sm text-gray-500 ml-2">
+                  {{ taskForm.get('recurrenceType')?.value === 'daily' ? 'day(s)' :
+                     taskForm.get('recurrenceType')?.value === 'weekly' ? 'week(s)' : 'month(s)' }}
+                </span>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Duration
+                </label>
+                <input
+                  type="number"
+                  formControlName="recurrenceDuration"
+                  min="0"
+                  class="input-primary"
+                  placeholder="0 = infinite"
+                />
+                <span class="text-sm text-gray-500 ml-2">occurrences</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  End Date (optional)
+                </label>
+                <input
+                  type="date"
+                  formControlName="recurrenceEndDate"
+                  class="input-primary"
+                />
+              </div>
+
+              <div *ngIf="taskForm.get('recurrenceType')?.value === 'weekly'">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Days of Week
+                </label>
+                <div class="flex flex-wrap gap-2">
+                  <label *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; let i = index"
+                         class="flex items-center space-x-1">
+                    <input
+                      type="checkbox"
+                      [value]="i"
+                      (change)="onDayOfWeekChange($event, i)"
+                      [checked]="isDaySelected(i)"
+                      class="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                    />
+                    <span class="text-sm">{{ day }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

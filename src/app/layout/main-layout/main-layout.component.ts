@@ -4,11 +4,22 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthService } from '../../shared/services/auth.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { User } from '../../types/user.interface';
+import { DigitalClockComponent } from '../../shared/components/digital-clock/digital-clock.component';
+import { NotificationPopupComponent } from '../../shared/components/notification-popup/notification-popup.component';
+import { ConfirmationDialogComponent } from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { CongratulationPopupComponent } from '../../shared/components/congratulation-popup/congratulation-popup.component';
+import { WelcomePopupComponent } from '../../shared/components/welcome-popup/welcome-popup';
+import { NotificationPopupService } from '../../shared/services/notification-popup.service';
+import { ConfirmationDialogService, ConfirmationDialogData } from '../../shared/services/confirmation-dialog.service';
+import { AlarmService } from '../../shared/services/alarm.service';
+import { OnboardingService } from '../../shared/services/onboarding';
+import { BirthdayReminderService } from '../../shared/services/birthday-reminder';
+import { NotificationData } from '../../shared/components/notification-popup/notification-popup.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, DigitalClockComponent, NotificationPopupComponent, ConfirmationDialogComponent, CongratulationPopupComponent, WelcomePopupComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
@@ -20,14 +31,27 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   sidebarOpen = signal(false);
   showNotifications = signal(false);
   theme = signal<'light' | 'dark' | 'auto'>('auto');
+
+  // Welcome popup and onboarding
+  showWelcomePopup = signal(false);
   actualTheme = signal<'light' | 'dark'>('light');
 
   private themeCheckInterval?: number;
 
+  notificationPopups = computed(() => this.notificationPopupService.notifications$());
+  congratulationPopups = computed(() => this.notificationPopupService.congratulations$());
+  confirmationDialogVisible = computed(() => this.confirmationDialogService.isVisible$());
+  confirmationDialogData = computed(() => this.confirmationDialogService.dialogData$() || undefined);
+
   constructor(
     private authService: AuthService,
     private notificationService: NotificationService,
-    private router: Router
+    private notificationPopupService: NotificationPopupService,
+    private confirmationDialogService: ConfirmationDialogService,
+    private alarmService: AlarmService,
+    private router: Router,
+    private onboardingService: OnboardingService,
+    private birthdayReminderService: BirthdayReminderService
   ) {
     // Apply theme changes
     effect(() => {
@@ -45,6 +69,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       this.theme.set('auto');
       this.actualTheme.set(prefersDark ? 'dark' : 'light');
+    }
+
+    // Check if we should show welcome popup
+    if (this.onboardingService.shouldShowWelcome()) {
+      // Delay showing the popup slightly to ensure the page is loaded
+      setTimeout(() => {
+        this.showWelcomePopup.set(true);
+      }, 1000);
     }
 
     // Listen for system theme changes
@@ -112,12 +144,45 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.authService.logout();
   }
 
+  // Welcome popup handlers
+  onWelcomeDismissed(): void {
+    this.onboardingService.markWelcomeSeen();
+    this.showWelcomePopup.set(false);
+  }
+
+  onWelcomeGoToProfile(): void {
+    this.onboardingService.markWelcomeSeen();
+    this.showWelcomePopup.set(false);
+    this.router.navigate(['/profile']);
+  }
+
+  // Test birthday reminder (for development/testing)
+  testBirthdayReminder(): void {
+    this.birthdayReminderService.checkBirthdayNow();
+  }
+
   markNotificationAsRead(notificationId: string): void {
     this.notificationService.markAsRead(notificationId);
   }
 
   markAllNotificationsAsRead(): void {
     this.notificationService.markAllAsRead();
+  }
+
+  dismissNotification(notificationId: string): void {
+    this.notificationPopupService.dismiss(notificationId);
+  }
+
+  dismissCongratulation(congratulationId: string): void {
+    this.notificationPopupService.dismissCongratulation(congratulationId);
+  }
+
+  onConfirmationDialogConfirmed(): void {
+    this.confirmationDialogService.confirm();
+  }
+
+  onConfirmationDialogCancelled(): void {
+    this.confirmationDialogService.cancel();
   }
 
   getThemeIcon(): string {
