@@ -128,27 +128,32 @@
   </aside>
 
   <!-- Main Content -->
-  <div class="lg:ml-64">
+  <div class="lg:ml-64 min-h-screen">
     <!-- Header -->
     <header class="sticky top-0 z-30 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700">
-      <div class="flex items-center justify-between px-4 py-4 lg:px-6">
-        <div class="flex items-center space-x-4">
-          <button 
+      <div class="flex items-center justify-between px-4 py-3 lg:px-6 lg:py-4">
+        <div class="flex items-center space-x-3 lg:space-x-4">
+          <button
             (click)="toggleSidebar()"
-            class="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            class="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
           </button>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">
             {{ getPageTitle() }}
           </h2>
         </div>
 
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-1 md:space-x-2 lg:space-x-4">
+          <!-- Digital Clock - Hidden on very small screens -->
+          <div class="hidden sm:block">
+            <app-digital-clock></app-digital-clock>
+          </div>
+
           <!-- Theme Toggle -->
-          <button 
+          <button
             (click)="toggleTheme()"
             class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
             [title]="'Theme: ' + getThemeLabel()"
@@ -239,9 +244,38 @@
     </header>
 
     <!-- Page Content -->
-    <main class="p-4 lg:p-6">
+    <main class="p-3 sm:p-4 lg:p-6 min-h-[calc(100vh-80px)] lg:min-h-[calc(100vh-100px)]">
       <router-outlet />
     </main>
+
+    <!-- Notification Popups -->
+    <app-notification-popup
+      *ngFor="let notification of notificationPopups()"
+      [notification]="notification"
+      (dismissed)="dismissNotification($event)"
+    ></app-notification-popup>
+
+    <!-- Welcome Popup -->
+    <app-welcome-popup
+      [show]="showWelcomePopup()"
+      (dismissed)="onWelcomeDismissed()"
+      (goToProfile)="onWelcomeGoToProfile()"
+    ></app-welcome-popup>
+
+    <!-- Congratulation Popups -->
+    <app-congratulation-popup
+      *ngFor="let congratulation of congratulationPopups()"
+      [congratulation]="congratulation"
+      (dismissed)="dismissCongratulation($event)"
+    ></app-congratulation-popup>
+
+    <!-- Confirmation Dialog -->
+    <app-confirmation-dialog
+      [isVisible]="confirmationDialogVisible()"
+      [data]="confirmationDialogData()"
+      (confirmed)="onConfirmationDialogConfirmed()"
+      (cancelled)="onConfirmationDialogCancelled()"
+    ></app-confirmation-dialog>
   </div>
 </div>
 

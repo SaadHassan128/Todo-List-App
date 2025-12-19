@@ -6,6 +6,9 @@ export interface User {
   phone: string;
   passwordHash: string;
   profilePicture: string; // base64
+  gender?: 'male' | 'female';
+  dateOfBirth?: Date;
+  role?: string; // Can be predefined or custom title
   createdAt: Date;
   settings: UserSettings;
 }
